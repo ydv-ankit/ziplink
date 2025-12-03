@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 
+	"github.com/ydv-ankit/go-url-shortener/models"
 	"github.com/ydv-ankit/go-url-shortener/utils"
 	"gorm.io/driver/mysql"
 
@@ -10,11 +11,14 @@ import (
 )
 
 func CreateMySQLClient() *gorm.DB {
-	dsn := os.Getenv("MYSQL_USER") + ":" + os.Getenv("MYSQL_PASS") + "@/"
+	dsn := os.Getenv("MYSQL_USER") + ":" + os.Getenv("MYSQL_PASS") + "@tcp(" + os.Getenv("MYSQL_HOST") + ")/" + os.Getenv("MYSQL_DB") + "?charset=utf8mb4&parseTime=True&loc=Local"
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic(err)
 	}
+
+	// auto migrate models
+	db.AutoMigrate(&models.User{}, &models.Url{})
 	utils.Log("MYSQL client connected")
 
 	return db
