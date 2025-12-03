@@ -1,4 +1,4 @@
-package db
+package config
 
 import (
 	"context"
@@ -11,11 +11,11 @@ import (
 var RedisCtx = context.Background()
 
 // main func to create redis client
-func CreateClient() *redis.Client {
+func CreateClient(dbNo int) *redis.Client {
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     os.Getenv("DB_ADDR"),
-		Password: os.Getenv("DB_PASS"),
-		DB:       0,
+		Addr:     os.Getenv("REDIS_ADDR"),
+		Password: os.Getenv("REDIS_PASS"),
+		DB:       dbNo,
 	})
 
 	return rdb
