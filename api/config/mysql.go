@@ -10,7 +10,9 @@ import (
 	"gorm.io/gorm"
 )
 
-func CreateMySQLClient() *gorm.DB {
+var MySQLClient *gorm.DB
+
+func CreateMySQLClient() {
 	dsn := os.Getenv("MYSQL_USER") + ":" + os.Getenv("MYSQL_PASS") + "@tcp(" + os.Getenv("MYSQL_HOST") + ")/" + os.Getenv("MYSQL_DB") + "?charset=utf8mb4&parseTime=True&loc=Local"
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
@@ -21,5 +23,12 @@ func CreateMySQLClient() *gorm.DB {
 	db.AutoMigrate(&models.User{}, &models.Url{})
 	utils.Log("MYSQL client connected")
 
-	return db
+	MySQLClient = db
+}
+
+func GetMySQLClient() *gorm.DB {
+	if MySQLClient == nil {
+		CreateMySQLClient()
+	}
+	return MySQLClient
 }

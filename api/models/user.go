@@ -35,19 +35,16 @@ func (user *User) CreateUser(tx *gorm.DB) error {
 	return tx.Create(user).Error
 }
 
-func (user *User) GetUser(tx *gorm.DB) error {
+func (user *User) GetUserById(tx *gorm.DB) error {
 	if user.Id == "" {
 		return errors.New("id is required")
 	}
 	return tx.Where("id = ?", user.Id).First(user).Error
 }
 
-func (user *User) LoginUser(tx *gorm.DB) error {
+func (user *User) GetUserByEmail(tx *gorm.DB) error {
 	if user.Email == "" {
 		return errors.New("email is required")
 	}
-	if user.Password == "" {
-		return errors.New("password is required")
-	}
-	return tx.Where("email = ? AND password = ?", user.Email, user.Password).First(user).Error
+	return tx.Where("email = ?", user.Email).First(user).Error
 }
