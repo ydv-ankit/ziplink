@@ -1,4 +1,4 @@
-import { useState, FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { ApiError } from "../services/api";
@@ -32,7 +32,7 @@ export default function Login() {
 	};
 
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
+		<div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 to-indigo-100 px-4">
 			<div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
 				<h2 className="text-3xl font-bold text-gray-900 mb-2 text-center">
 					Welcome Back
