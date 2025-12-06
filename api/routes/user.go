@@ -8,6 +8,7 @@ import (
 	"github.com/ydv-ankit/go-url-shortener/config"
 	"github.com/ydv-ankit/go-url-shortener/models"
 	"github.com/ydv-ankit/go-url-shortener/utils"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func CreateUser(c *fiber.Ctx) error {
@@ -31,6 +32,16 @@ func CreateUser(c *fiber.Ctx) error {
 		})
 	}
 	// create new user
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
+	user.Password = string(hashedPassword)
+	if err != nil {
+		utils.Log("Error hashing password: " + err.Error())
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Error hashing password",
+			"success": false,
+			"error":   err.Error(),
+		})
+	}
 	if err := user.CreateUser(tx); err != nil {
 		utils.Log("Error creating user: " + err.Error())
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -79,7 +90,8 @@ func LoginUser(c *fiber.Ctx) error {
 			"error":   "User not found",
 		})
 	}
-	if password != user.Password {
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+		tx.Rollback()
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"message": "Invalid credentials",
 			"success": false,
