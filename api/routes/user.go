@@ -130,6 +130,15 @@ func LoginUser(c *fiber.Ctx) error {
 }
 
 func LogoutUser(c *fiber.Ctx) error {
-	c.ClearCookie("token")
-	return c.Redirect("/", fiber.StatusTemporaryRedirect)
+	// Clear cookie by setting it with same attributes but expired
+	tokenCookie := &fiber.Cookie{
+		Name:     "token",
+		Value:    "",
+		Expires:  time.Now().Add(-time.Hour), // Set to past time to expire it
+		HTTPOnly: true,
+		Secure:   os.Getenv("APP_ENV") == "production",
+		SameSite: "Strict",
+	}
+	c.Cookie(tokenCookie)
+	return c.SendStatus(fiber.StatusOK)
 }
