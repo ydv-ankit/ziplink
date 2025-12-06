@@ -9,6 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/ydv-ankit/go-url-shortener/config"
 	"github.com/ydv-ankit/go-url-shortener/models"
+	"gorm.io/gorm"
 )
 
 const (
@@ -16,7 +17,7 @@ const (
 	SHORT_URL_LENGTH      = 7
 )
 
-func generateShortUrl(retry int) (string, error) {
+func generateShortUrl(tx *gorm.DB, retry int) (string, error) {
 	if retry > SHORT_URL_RETRY_LIMIT {
 		return "", errors.New("failed to generate short url")
 	}
@@ -27,10 +28,10 @@ func generateShortUrl(retry int) (string, error) {
 	for i := range shortUrl {
 		shortUrl[i] = chars[random.Intn(len(chars))]
 	}
-	// check if short url already exists
-	if err := (&models.Url{Short: string(shortUrl)}).GetUrlByShort(config.GetMySQLClient()); err == nil {
+	// check if short url already exists using the transaction to ensure atomicity
+	if err := (&models.Url{Short: string(shortUrl)}).GetUrlByShort(tx); err == nil {
 		fmt.Println("short url already exists", string(shortUrl))
-		return generateShortUrl(retry + 1)
+		return generateShortUrl(tx, retry+1)
 	}
 	return string(shortUrl), nil
 }
@@ -48,9 +49,10 @@ func ShortenUrl(c *fiber.Ctx) error {
 	userId := c.Locals("userId").(string)
 	url.UserId = userId
 	tx := config.GetMySQLClient().Begin()
-	// create short url
-	shortUrl, err := generateShortUrl(0)
+	// create short url using the transaction to ensure atomicity
+	shortUrl, err := generateShortUrl(tx, 0)
 	if err != nil {
+		tx.Rollback()
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"message": "Failed to generate short url",
 			"success": false,
