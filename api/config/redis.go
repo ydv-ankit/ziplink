@@ -9,9 +9,10 @@ import (
 
 // for external use
 var RedisCtx = context.Background()
+var RedisClient *redis.Client
 
 // main func to create redis client
-func CreateClient(dbNo int) *redis.Client {
+func createRedisClient(dbNo int) *redis.Client {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     os.Getenv("REDIS_ADDR"),
 		Password: os.Getenv("REDIS_PASS"),
@@ -19,4 +20,11 @@ func CreateClient(dbNo int) *redis.Client {
 	})
 
 	return rdb
+}
+
+func GetRedisClient(dbNo int) *redis.Client {
+	if RedisClient == nil {
+		RedisClient = createRedisClient(dbNo)
+	}
+	return RedisClient
 }
