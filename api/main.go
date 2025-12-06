@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/ydv-ankit/go-url-shortener/config"
 	"github.com/ydv-ankit/go-url-shortener/routes"
 	"github.com/ydv-ankit/go-url-shortener/utils"
@@ -11,6 +12,12 @@ import (
 
 func setupRoutes(app *fiber.App) {
 	// user routes
+	app.Use(cors.New(cors.Config{
+		AllowOrigins:     os.Getenv("DOMAIN"),
+		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
+		AllowMethods:     "GET, POST, PUT, DELETE, OPTIONS",
+		AllowCredentials: true,
+	}))
 	app.Post("/api/v1/create-user", routes.CreateUser)
 	app.Post("/api/v1/login", routes.LoginUser)
 }
