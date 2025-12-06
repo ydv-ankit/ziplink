@@ -6,6 +6,26 @@ import (
 	"github.com/ydv-ankit/go-url-shortener/models"
 )
 
+func GetAllUrlsByUserId(c *fiber.Ctx) error {
+	userId := c.Locals("userId").(string)
+	tx := config.GetMySQLClient().Begin()
+	urls := []models.Url{}
+	if err := tx.Where("user_id = ?", userId).Order("created_at DESC").Find(&urls).Error; err != nil {
+		tx.Rollback()
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Error getting urls",
+			"success": false,
+			"error":   err.Error(),
+		})
+	}
+	tx.Commit()
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Urls fetched successfully",
+		"success": true,
+		"data":    urls,
+	})
+}
+
 func DeleteUrl(c *fiber.Ctx) error {
 	url := new(models.Url)
 	userId := c.Locals("userId").(string)

@@ -51,6 +51,8 @@ func setupRoutes(app *fiber.App) {
 	app.Get("/:short", routes.ResolveUrl)
 	// auth middleware
 	app.Use(authMiddleware)
+	// get all urls by user id route
+	app.Get("/api/v1/urls", routes.GetAllUrlsByUserId)
 	// shorten url route
 	app.Post("/api/v1/shorten", routes.ShortenUrl)
 	// delete url route
