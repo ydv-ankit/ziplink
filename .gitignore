@@ -1,5 +1,4 @@
 .env*
-go.sum
 
 tmp/
 .env*
