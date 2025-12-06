@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"os"
 	"strings"
 )
@@ -12,7 +13,8 @@ func EnvParser(filepath ...string) {
 	}
 	content, err := os.ReadFile(filepath[0])
 	if err != nil {
-		panic("failed to load" + filepath[0] + "file")
+		fmt.Println("failed to load " + filepath[0] + " file")
+		return
 	}
 	envArgs := strings.Split(string(content), "\n")
 	for idx := range len(envArgs) {
