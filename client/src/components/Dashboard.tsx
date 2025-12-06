@@ -5,6 +5,7 @@ import { api, ApiError } from "../services/api";
 import type { Url } from "../types";
 import CreateUrlModal from "./CreateUrlModal";
 import Toast from "./Toast";
+import ConfirmModal from "./ConfirmModal";
 
 export default function Dashboard() {
 	const { user, logout } = useAuth();
@@ -15,6 +16,10 @@ export default function Dashboard() {
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [deletingId, setDeletingId] = useState<string | null>(null);
 	const [toastMessage, setToastMessage] = useState<string | null>(null);
+	const [confirmDelete, setConfirmDelete] = useState<{
+		isOpen: boolean;
+		urlId: string | null;
+	}>({ isOpen: false, urlId: null });
 
 	const fetchUrls = async () => {
 		setLoading(true);
@@ -50,11 +55,14 @@ export default function Dashboard() {
 		}
 	};
 
-	const handleDelete = async (id: string) => {
-		if (!confirm("Are you sure you want to delete this URL?")) {
-			return;
-		}
+	const handleDeleteClick = (id: string) => {
+		setConfirmDelete({ isOpen: true, urlId: id });
+	};
 
+	const handleDeleteConfirm = async () => {
+		if (!confirmDelete.urlId) return;
+
+		const id = confirmDelete.urlId;
 		setDeletingId(id);
 		try {
 			await api.deleteUrl({ id });
@@ -67,6 +75,7 @@ export default function Dashboard() {
 			}
 		} finally {
 			setDeletingId(null);
+			setConfirmDelete({ isOpen: false, urlId: null });
 		}
 	};
 
@@ -350,7 +359,7 @@ export default function Dashboard() {
 												</td>
 												<td className="px-4 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
 													<button
-														onClick={() => handleDelete(url.id)}
+														onClick={() => handleDeleteClick(url.id)}
 														disabled={deletingId === url.id}
 														className="text-red-600 disabled:opacity-50 border border-red-600 rounded-md px-2 py-1 hover:bg-red-600 hover:text-white disabled:cursor-not-allowed cursor-pointer transition"
 													>
@@ -383,6 +392,17 @@ export default function Dashboard() {
 				message={toastMessage || ""}
 				isVisible={!!toastMessage}
 				onClose={() => setToastMessage(null)}
+			/>
+
+			{/* Confirm Delete Modal */}
+			<ConfirmModal
+				isOpen={confirmDelete.isOpen}
+				onClose={() => setConfirmDelete({ isOpen: false, urlId: null })}
+				onConfirm={handleDeleteConfirm}
+				title="Delete URL"
+				message="Are you sure you want to delete this URL? This action cannot be undone."
+				confirmText="Delete"
+				cancelText="Cancel"
 			/>
 		</div>
 	);
