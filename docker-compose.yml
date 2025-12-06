@@ -49,7 +49,7 @@ services:
       APP_PORT: :3000
       APP_HOST: 0.0.0.0
       DOMAIN: localhost:3000
-      MYSQL_HOST: mysql
+      MYSQL_HOST: mysql:3306
       MYSQL_DB: url_shortener
       MYSQL_USER: root
       MYSQL_PASS: root
