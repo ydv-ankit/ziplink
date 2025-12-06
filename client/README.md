@@ -1,73 +1,153 @@
-# React + TypeScript + Vite
+# URL Shortener - React Client
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern, responsive React application for managing shortened URLs, built with TypeScript, Vite, and Tailwind CSS.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- 🔐 **User Authentication**: Register and login with secure JWT-based authentication
+- 📊 **Dashboard**: View all your shortened URLs in a responsive table
+- ➕ **Create URLs**: Generate new short URLs via a user-friendly modal popup
+- 🗑️ **Delete URLs**: Remove shortened URLs with confirmation
+- 📱 **Responsive Design**: Mobile-friendly interface using Tailwind CSS
+- ⚠️ **Error Handling**: Clear error messages when API is unavailable
+- 📋 **Copy to Clipboard**: One-click copy of short URLs
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **React 19** - UI library
+- **TypeScript** - Type safety
+- **Vite** - Build tool and dev server
+- **Tailwind CSS** - Styling
+- **React Router** - Client-side routing
 
-## Expanding the ESLint configuration
+## Prerequisites
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- Node.js 18+ and npm
+- Go API server running (see main project README)
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Installation
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+1. **Install dependencies**:
+   ```bash
+   npm install
+   ```
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+2. **Configure API URL** (optional):
+   Create a `.env` file in the `client` directory:
+   ```env
+   VITE_API_URL=http://localhost:8080
+   ```
+   If not set, defaults to `http://localhost:8080`
+
+3. **Start development server**:
+   ```bash
+   npm run dev
+   ```
+
+   The app will be available at `http://localhost:5173` (or the port Vite assigns)
+
+## Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
+
+## Project Structure
+
+```
+src/
+├── components/       # React components
+│   ├── Login.tsx    # Login page
+│   ├── Register.tsx # Registration page
+│   ├── Dashboard.tsx # Main dashboard with URL table
+│   ├── CreateUrlModal.tsx # Modal for creating new URLs
+│   ├── ProtectedRoute.tsx # Route protection component
+│   └── Toast.tsx    # Toast notification component
+├── contexts/        # React contexts
+│   └── AuthContext.tsx # Authentication context
+├── services/        # API services
+│   └── api.ts      # API client with error handling
+├── types/          # TypeScript type definitions
+│   └── index.ts    # Shared types
+├── App.tsx         # Main app component with routing
+└── main.tsx        # Entry point
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## API Integration
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+The client communicates with the Go API server using:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- **Cookies**: Authentication tokens are stored in HTTP-only cookies
+- **CORS**: Configured to work with the API server's CORS settings
+- **Error Handling**: Graceful handling of network errors and API unavailability
+
+### API Endpoints Used
+
+- `POST /api/v1/create-user` - User registration
+- `POST /api/v1/login` - User login
+- `POST /api/v1/logout` - User logout
+- `GET /api/v1/urls` - Get all user's URLs (protected)
+- `POST /api/v1/shorten` - Create short URL (protected)
+- `DELETE /api/v1/delete` - Delete URL (protected)
+
+## Features in Detail
+
+### Authentication
+
+- Secure login and registration
+- Session persistence using localStorage
+- Automatic redirect to login if not authenticated
+- Protected routes for dashboard
+
+### Dashboard
+
+- Responsive table displaying all shortened URLs
+- Mobile-optimized layout (columns hide on smaller screens)
+- Copy to clipboard functionality
+- Delete with confirmation
+- Empty state when no URLs exist
+
+### URL Management
+
+- Create new short URLs via modal popup
+- View original and short URLs
+- See creation dates
+- One-click copy functionality
+- Delete with confirmation dialog
+
+## Error Handling
+
+The application handles various error scenarios:
+
+- **API Unavailable**: Shows clear error message when API server is down
+- **Network Errors**: Displays user-friendly network error messages
+- **Authentication Errors**: Redirects to login on 401 errors
+- **Validation Errors**: Shows field-specific error messages
+
+## Building for Production
+
+```bash
+npm run build
 ```
+
+The production build will be in the `dist` directory, ready to be served by any static file server.
+
+## Environment Variables
+
+- `VITE_API_URL` - Base URL for the API server (default: `http://localhost:8080`)
+
+## Browser Support
+
+- Chrome (latest)
+- Firefox (latest)
+- Safari (latest)
+- Edge (latest)
+
+## Development Notes
+
+- The app uses React Router for client-side routing
+- Authentication state is managed via React Context
+- API calls include credentials (cookies) for authentication
+- All API errors are caught and displayed to users
+- Responsive design uses Tailwind's mobile-first approach
