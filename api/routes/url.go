@@ -1,22 +1,15 @@
 package routes
 
 import (
-	"crypto/sha256"
-	"encoding/base64"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/ydv-ankit/go-url-shortener/config"
 	"github.com/ydv-ankit/go-url-shortener/models"
 )
 
-func generateShortUrl(longUrl string) string {
-	hash := sha256.Sum256([]byte(longUrl))
-	return base64.URLEncoding.EncodeToString(hash[:])[:6]
-}
-
-func ShortenUrl(c *fiber.Ctx) error {
+func DeleteUrl(c *fiber.Ctx) error {
 	url := new(models.Url)
-	err := c.BodyParser(url)
+	userId := c.Locals("userId").(string)
+	err := c.BodyParser(&url)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "Invalid request body",
@@ -24,24 +17,19 @@ func ShortenUrl(c *fiber.Ctx) error {
 			"error":   err.Error(),
 		})
 	}
-	userId := c.Locals("userId").(string)
 	url.UserId = userId
 	tx := config.GetMySQLClient().Begin()
-	// create short url
-	url.Short = generateShortUrl(url.Long)
-	// create new url
-	if err := url.CreateUrl(tx); err != nil {
+	if err := url.DeleteUrl(tx); err != nil {
 		tx.Rollback()
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Error creating short url",
+			"message": "Error deleting url",
 			"success": false,
 			"error":   err.Error(),
 		})
 	}
 	tx.Commit()
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "Short url created successfully",
+		"message": "Url deleted successfully",
 		"success": true,
-		"data":    url,
 	})
 }

@@ -121,6 +121,15 @@ func LoginUser(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "User logged in successfully",
 		"success": true,
-		"data":    user,
+		"data": fiber.Map{
+			"userId": user.Id,
+			"name":   user.Name,
+			"email":  user.Email,
+		},
 	})
+}
+
+func LogoutUser(c *fiber.Ctx) error {
+	c.ClearCookie("token")
+	return c.Redirect("/", fiber.StatusTemporaryRedirect)
 }
