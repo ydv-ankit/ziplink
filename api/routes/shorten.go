@@ -1,17 +1,38 @@
 package routes
 
 import (
-	"crypto/sha256"
-	"encoding/base64"
+	"errors"
+	"fmt"
+	"math/rand"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/ydv-ankit/go-url-shortener/config"
 	"github.com/ydv-ankit/go-url-shortener/models"
 )
 
-func generateShortUrl(longUrl string) string {
-	hash := sha256.Sum256([]byte(longUrl))
-	return base64.URLEncoding.EncodeToString(hash[:])[:6]
+const (
+	SHORT_URL_RETRY_LIMIT = 10
+	SHORT_URL_LENGTH      = 7
+)
+
+func generateShortUrl(retry int) (string, error) {
+	if retry > SHORT_URL_RETRY_LIMIT {
+		return "", errors.New("failed to generate short url")
+	}
+	// generate random string of 7 characters using base62
+	random := rand.New(rand.NewSource(time.Now().UnixNano()))
+	chars := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	shortUrl := make([]byte, SHORT_URL_LENGTH)
+	for i := range shortUrl {
+		shortUrl[i] = chars[random.Intn(len(chars))]
+	}
+	// check if short url already exists
+	if err := (&models.Url{Short: string(shortUrl)}).GetUrlByShort(config.GetMySQLClient()); err == nil {
+		fmt.Println("short url already exists", string(shortUrl))
+		return generateShortUrl(retry + 1)
+	}
+	return string(shortUrl), nil
 }
 
 func ShortenUrl(c *fiber.Ctx) error {
@@ -28,7 +49,15 @@ func ShortenUrl(c *fiber.Ctx) error {
 	url.UserId = userId
 	tx := config.GetMySQLClient().Begin()
 	// create short url
-	url.Short = generateShortUrl(url.Long)
+	shortUrl, err := generateShortUrl(0)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to generate short url",
+			"success": false,
+			"error":   err.Error(),
+		})
+	}
+	url.Short = shortUrl
 	// create new url
 	if err := url.CreateUrl(tx); err != nil {
 		tx.Rollback()
