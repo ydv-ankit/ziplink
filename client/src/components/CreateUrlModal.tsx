@@ -15,6 +15,7 @@ export default function CreateUrlModal({
 }: CreateUrlModalProps) {
 	const [longUrl, setLongUrl] = useState("");
 	const [customShort, setCustomShort] = useState("");
+	const [expiry, setExpiry] = useState("");
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
@@ -49,15 +50,26 @@ export default function CreateUrlModal({
 		}
 
 		try {
-			const requestData: { long: string; customShort?: string } = { long: longUrl };
+			const requestData: { long: string; customShort?: string; expiry?: string } = { long: longUrl };
 			if (customShort) {
 				requestData.customShort = customShort;
+			}
+			if (expiry) {
+				// Convert datetime-local format to ISO string
+				const expiryDate = new Date(expiry);
+				if (expiryDate.getTime() <= Date.now()) {
+					setError("Expiry date must be in the future");
+					setLoading(false);
+					return;
+				}
+				requestData.expiry = expiryDate.toISOString();
 			}
 			const response = await api.shortenUrl(requestData);
 			if (response.success && response.data) {
 				onSuccess(response.data);
 				setLongUrl("");
 				setCustomShort("");
+				setExpiry("");
 				onClose();
 			}
 		} catch (err) {
@@ -74,6 +86,7 @@ export default function CreateUrlModal({
 	const handleClose = () => {
 		setLongUrl("");
 		setCustomShort("");
+		setExpiry("");
 		setError(null);
 		onClose();
 	};
@@ -159,6 +172,32 @@ export default function CreateUrlModal({
 						/>
 						<p className="mt-1 text-xs text-gray-500">
 							3-20 characters, letters and numbers only
+						</p>
+					</div>
+
+					<div>
+						<label
+							htmlFor="expiry"
+							className="block text-sm font-medium text-gray-700 mb-2"
+						>
+							Expiry Date <span className="text-gray-500 text-xs">(Optional)</span>
+						</label>
+						<input
+							id="expiry"
+							type="datetime-local"
+							value={expiry}
+							onChange={(e) => {
+								setExpiry(e.target.value);
+								// Clear error when user changes expiry
+								if (error && error.includes("Expiry")) {
+									setError(null);
+								}
+							}}
+							min={new Date().toISOString().slice(0, 16)}
+							className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
+						/>
+						<p className="mt-1 text-xs text-gray-500">
+							Leave empty for default 30 days expiry
 						</p>
 					</div>
 

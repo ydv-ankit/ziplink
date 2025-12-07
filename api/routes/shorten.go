@@ -98,8 +98,9 @@ func generateShortUrl(tx *gorm.DB, retry int) (string, error) {
 }
 
 type ShortenUrlRequest struct {
-	Long       string `json:"long"`
-	CustomShort string `json:"customShort,omitempty"`
+	Long        string    `json:"long"`
+	CustomShort string    `json:"customShort,omitempty"`
+	Expiry      time.Time `json:"expiry,omitempty"`
 }
 
 func ShortenUrl(c *fiber.Ctx) error {
@@ -165,6 +166,7 @@ func ShortenUrl(c *fiber.Ctx) error {
 		UserId: userId,
 		Long:   req.Long,
 		Short:  shortUrl,
+		Expiry: req.Expiry,
 	}
 
 	// create new url

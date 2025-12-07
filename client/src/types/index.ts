@@ -38,6 +38,7 @@ export interface RegisterRequest {
 export interface ShortenUrlRequest {
 	long: string;
 	customShort?: string;
+	expiry?: string;
 }
 
 export interface DeleteUrlRequest {
