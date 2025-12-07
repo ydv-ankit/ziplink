@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { api, ApiError } from "../services/api";
@@ -20,9 +20,12 @@ export default function Dashboard() {
 		isOpen: boolean;
 		urlId: string | null;
 	}>({ isOpen: false, urlId: null });
+	const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-	const fetchUrls = async () => {
-		setLoading(true);
+	const fetchUrls = async (isBackgroundRefresh = false) => {
+		if (!isBackgroundRefresh) {
+			setLoading(true);
+		}
 		setError(null);
 
 		try {
@@ -31,18 +34,36 @@ export default function Dashboard() {
 				setUrls(response.data);
 			}
 		} catch (err) {
-			if (err instanceof ApiError) {
-				setError(err.message);
-			} else {
-				setError("Failed to load URLs. Please try again.");
+			// Only show error on initial load, not on background refreshes
+			if (!isBackgroundRefresh) {
+				if (err instanceof ApiError) {
+					setError(err.message);
+				} else {
+					setError("Failed to load URLs. Please try again.");
+				}
 			}
 		} finally {
-			setLoading(false);
+			if (!isBackgroundRefresh) {
+				setLoading(false);
+			}
 		}
 	};
 
 	useEffect(() => {
-		fetchUrls();
+		// Initial fetch
+		fetchUrls(false);
+
+		// Set up interval to refresh every 10 seconds
+		intervalRef.current = setInterval(() => {
+			fetchUrls(true);
+		}, 10000);
+
+		// Cleanup interval on unmount
+		return () => {
+			if (intervalRef.current) {
+				clearInterval(intervalRef.current);
+			}
+		};
 	}, []);
 
 	const handleLogout = async () => {
@@ -420,4 +441,3 @@ export default function Dashboard() {
 		</div>
 	);
 }
-
