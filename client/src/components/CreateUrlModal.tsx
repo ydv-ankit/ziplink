@@ -14,19 +14,50 @@ export default function CreateUrlModal({
 	onSuccess,
 }: CreateUrlModalProps) {
 	const [longUrl, setLongUrl] = useState("");
+	const [customShort, setCustomShort] = useState("");
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+
+	const validateCustomShort = (value: string): string | null => {
+		if (value === "") return null; // Empty is allowed
+		
+		if (value.length < 3) {
+			return "Custom short code must be at least 3 characters";
+		}
+		if (value.length > 20) {
+			return "Custom short code must be at most 20 characters";
+		}
+		if (!/^[a-zA-Z0-9]+$/.test(value)) {
+			return "Custom short code must contain only letters and numbers";
+		}
+		return null;
+	};
 
 	const handleSubmit = async (e: FormEvent) => {
 		e.preventDefault();
 		setLoading(true);
 		setError(null);
 
+		// Validate custom short if provided
+		if (customShort) {
+			const validationError = validateCustomShort(customShort);
+			if (validationError) {
+				setError(validationError);
+				setLoading(false);
+				return;
+			}
+		}
+
 		try {
-			const response = await api.shortenUrl({ long: longUrl });
+			const requestData: { long: string; customShort?: string } = { long: longUrl };
+			if (customShort) {
+				requestData.customShort = customShort;
+			}
+			const response = await api.shortenUrl(requestData);
 			if (response.success && response.data) {
 				onSuccess(response.data);
 				setLongUrl("");
+				setCustomShort("");
 				onClose();
 			}
 		} catch (err) {
@@ -42,6 +73,7 @@ export default function CreateUrlModal({
 
 	const handleClose = () => {
 		setLongUrl("");
+		setCustomShort("");
 		setError(null);
 		onClose();
 	};
@@ -99,6 +131,35 @@ export default function CreateUrlModal({
 							className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
 							placeholder="https://example.com/very/long/url"
 						/>
+					</div>
+
+					<div>
+						<label
+							htmlFor="customShort"
+							className="block text-sm font-medium text-gray-700 mb-2"
+						>
+							Custom Short Code <span className="text-gray-500 text-xs">(Optional)</span>
+						</label>
+						<input
+							id="customShort"
+							type="text"
+							value={customShort}
+							onChange={(e) => {
+								const value = e.target.value;
+								setCustomShort(value);
+								// Clear error when user starts typing
+								if (error && error.includes("Custom short")) {
+									setError(null);
+								}
+							}}
+							className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
+							placeholder="myCustomLink"
+							pattern="[a-zA-Z0-9]+"
+							maxLength={20}
+						/>
+						<p className="mt-1 text-xs text-gray-500">
+							3-20 characters, letters and numbers only
+						</p>
 					</div>
 
 					<div className="flex gap-3 pt-4">
