@@ -13,93 +13,26 @@ export default function ShortUrlRedirect() {
 			return;
 		}
 
-		// Validate that it looks like a short URL (7 alphanumeric characters)
-		// This prevents matching routes like /api, /login, etc.
-		if (!/^[a-zA-Z0-9]{7}$/.test(short)) {
-			navigate("/");
-			return;
-		}
-
-		let isMounted = true;
-
-		const resolveUrl = async () => {
-			const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
-			
-			// First, try to get the redirect location using fetch with manual redirect
+		(async()=>{
 			try {
 				setLoading(true);
-				const response = await fetch(`${API_BASE_URL}/${short}`, {
+				setError(null);
+				const response = await fetch(`${import.meta.env.VITE_API_URL}/${short}`, {
 					method: "GET",
 					credentials: "include",
-					redirect: "manual", // Don't follow redirects automatically to avoid CORS
 				});
-
-				// Check if component is still mounted
-				if (!isMounted) return;
-
-				// Check for redirect status codes (301, 302, 307, 308)
-				if (response.status === 301 || response.status === 302 || response.status === 307 || response.status === 308) {
-					const location = response.headers.get("Location");
-					if (location) {
-						// Redirect to the long URL
-						window.location.href = location;
-						return;
-					}
+				if (response.ok) {
+					const data = await response.text();
+					window.location.href = data;
+				} else {
+					throw new Error("Failed to resolve URL");
 				}
-
-				// Check for error status codes
-				if (response.status === 404) {
-					if (isMounted) {
-						setError("URL not found");
-						setLoading(false);
-					}
-					return;
-				}
-
-				if (response.status === 410) {
-					if (isMounted) {
-						setError("URL has expired");
-						setLoading(false);
-					}
-					return;
-				}
-
-				// If status is 0 or other error, it might be CORS or network issue
-				// In this case, redirect directly to API endpoint and let server handle it
-				if (response.status === 0 || response.status >= 400) {
-					// Redirect directly to API - server will handle the redirect
-					// This bypasses CORS issues
-					window.location.href = `${API_BASE_URL}/${short}`;
-					return;
-				}
-
-				// Try to parse JSON error response for other status codes
-				if (isMounted) {
-					try {
-						const errorData = await response.json();
-						setError(errorData.message || "Failed to resolve URL");
-						setLoading(false);
-					} catch {
-						setError(`Failed to resolve URL (Status: ${response.status})`);
-						setLoading(false);
-					}
-				}
-			} catch (err) {
-				// If fetch fails (network error, CORS, etc.), redirect directly to API
-				// The server will handle the redirect, bypassing CORS
-				if (isMounted) {
-					// Redirect to API endpoint - let the server handle the redirect
-					window.location.href = `${API_BASE_URL}/${short}`;
-				}
+			} catch (error) {
+				setError(error instanceof Error ? error.message : "Failed to resolve URL");
+			} finally {
+				setLoading(false);
 			}
-		};
-
-		resolveUrl();
-
-		// Cleanup function to mark component as unmounted
-		return () => {
-			isMounted = false;
-		};
+		})()
 	}, [short, navigate]);
 
 	if (loading) {

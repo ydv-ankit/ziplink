@@ -20,7 +20,7 @@ func CreateMySQLClient() {
 	}
 
 	// auto migrate models
-	db.AutoMigrate(&models.User{}, &models.Url{})
+	db.AutoMigrate(&models.User{}, &models.Url{}, &models.UrlClick{})
 	utils.Log("MYSQL client connected")
 
 	MySQLClient = db

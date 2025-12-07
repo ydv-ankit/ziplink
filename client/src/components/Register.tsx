@@ -20,7 +20,7 @@ export default function Register() {
 
 		try {
 			await register({ name, email, password });
-			navigate("/");
+			navigate("/login");
 		} catch (err) {
 			if (err instanceof ApiError) {
 				setLocalError(err.message);

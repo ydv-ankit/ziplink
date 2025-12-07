@@ -241,6 +241,9 @@ export default function Dashboard() {
 										<th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
 											Original URL
 										</th>
+										<th className="px-4 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+											Clicks
+										</th>
 										<th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
 											Created
 										</th>
@@ -307,20 +310,25 @@ export default function Dashboard() {
 														>
 															{url.long}
 														</a>
-														<div className="xl:hidden">
-															{expired ? (
-																<span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
-																	Expired
-																</span>
-															) : expiringSoon ? (
-																<span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-																	Expires: {formatExpiryDate(url.expiry)}
-																</span>
-															) : (
-																<span className="text-xs text-gray-500">
-																	Expires: {formatExpiryDate(url.expiry)}
-																</span>
-															)}
+														<div className="flex items-center gap-2">
+															<span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+																{url.clicks || 0} clicks
+															</span>
+															<div className="xl:hidden">
+																{expired ? (
+																	<span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+																		Expired
+																	</span>
+																) : expiringSoon ? (
+																	<span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+																		Expires: {formatExpiryDate(url.expiry)}
+																	</span>
+																) : (
+																	<span className="text-xs text-gray-500">
+																		Expires: {formatExpiryDate(url.expiry)}
+																	</span>
+																)}
+															</div>
 														</div>
 													</div>
 												</td>
@@ -333,6 +341,11 @@ export default function Dashboard() {
 													>
 														{url.long}
 													</a>
+												</td>
+												<td className="px-4 sm:px-6 py-4 whitespace-nowrap text-center">
+													<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+														{url.clicks || 0}
+													</span>
 												</td>
 												<td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden lg:table-cell">
 													{formatDate(url.CreatedAt)}

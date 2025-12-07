@@ -14,6 +14,7 @@ export interface Url {
 	long: string;
 	short: string;
 	expiry: string;
+	clicks: number;
 }
 
 export interface ApiResponse<T = any> {

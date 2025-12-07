@@ -12,6 +12,7 @@ import (
 )
 
 type CacheUrl struct {
+	Id     string    `json:"id"`
 	Long   string    `json:"long"`
 	Short  string    `json:"short"`
 	Expiry time.Time `json:"expiry"`
@@ -33,6 +34,7 @@ func ResolveUrl(c *fiber.Ctx) error {
 			fmt.Println("error unmarshalling url", err)
 		}
 		url.Expiry = cachedUrl.Expiry
+		url.Id = cachedUrl.Id
 		url.Long = cachedUrl.Long
 		url.Short = cachedUrl.Short
 	} else {
@@ -52,6 +54,7 @@ func ResolveUrl(c *fiber.Ctx) error {
 		cacheUrl.Long = url.Long
 		cacheUrl.Short = url.Short
 		cacheUrl.Expiry = url.Expiry
+		cacheUrl.Id = url.Id
 		jsonData, err := json.Marshal(cacheUrl)
 		if err != nil {
 			fmt.Println("error marshalling url", err)
@@ -69,5 +72,20 @@ func ResolveUrl(c *fiber.Ctx) error {
 			"error":   "Url expired",
 		})
 	}
-	return c.Redirect(url.Long, fiber.StatusTemporaryRedirect)
+
+	// Track click
+	go func(ip string, urlId string) {
+		click := new(models.UrlClick)
+		click.UrlId = urlId
+		click.IpAddress = ip
+		tx := config.GetMySQLClient().Begin()
+		if err := click.CreateClick(tx); err != nil {
+			tx.Rollback()
+			fmt.Println("error tracking click:", err)
+			return
+		}
+		tx.Commit()
+	}(c.IP(), url.Id)
+
+	return c.SendString(url.Long)
 }

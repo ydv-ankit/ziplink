@@ -6,6 +6,11 @@ import (
 	"github.com/ydv-ankit/go-url-shortener/models"
 )
 
+type UrlWithClicks struct {
+	models.Url
+	Clicks int64 `json:"clicks"`
+}
+
 func GetAllUrlsByUserId(c *fiber.Ctx) error {
 	userId := c.Locals("userId").(string)
 	tx := config.GetMySQLClient().Begin()
@@ -18,11 +23,25 @@ func GetAllUrlsByUserId(c *fiber.Ctx) error {
 			"error":   err.Error(),
 		})
 	}
+
+	// Get click counts for each URL
+	urlsWithClicks := make([]UrlWithClicks, len(urls))
+	for i, url := range urls {
+		clickCount, err := models.GetClickCountByUrlId(tx, url.Id)
+		if err != nil {
+			clickCount = 0 // Default to 0 if error
+		}
+		urlsWithClicks[i] = UrlWithClicks{
+			Url:    url,
+			Clicks: clickCount,
+		}
+	}
 	tx.Commit()
+
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "Urls fetched successfully",
 		"success": true,
-		"data":    urls,
+		"data":    urlsWithClicks,
 	})
 }
 
